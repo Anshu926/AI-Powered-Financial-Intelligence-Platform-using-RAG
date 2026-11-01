@@ -31,6 +31,7 @@ import {
   Legend,
   Cell
 } from 'recharts';
+import { fetchAvailableCompanies, compareCompaniesAPI } from '../services/api';
 
 // Distinct colors for up to 4 companies
 const COMPANY_COLORS = [
@@ -85,9 +86,7 @@ export default function CompanyComparison() {
     setFetchingList(true);
     setError(null);
     try {
-      const res = await fetch('/api/companies');
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const json = await res.json();
+      const json = await fetchAvailableCompanies();
       const list = json.companies || [];
       setAvailableCompanies(list);
 
@@ -106,7 +105,7 @@ export default function CompanyComparison() {
       }
     } catch (err) {
       console.error('Failed to load companies:', err);
-      setError('Failed to fetch available companies for comparison.');
+      setError(err.message || 'Failed to fetch available companies for comparison.');
     } finally {
       setFetchingList(false);
     }
@@ -121,16 +120,7 @@ export default function CompanyComparison() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/compare', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companies: idsToCompare })
-      });
-      if (!res.ok) {
-        const errorJson = await res.json().catch(() => ({}));
-        throw new Error(errorJson.detail || `Server returned ${res.status}`);
-      }
-      const json = await res.json();
+      const json = await compareCompaniesAPI(idsToCompare);
       setComparisonData(json.data);
     } catch (err) {
       console.error('Comparison error:', err);
